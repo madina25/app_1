@@ -9,6 +9,7 @@ import {AboutComponent} from "./about/about.component";
 import {HomeComponent} from "./home/home.component";
 import {NotFoundComponent} from "./not-found/not-found.component";
 import {CommonModule} from "@angular/common";
+import {BoldDirective} from "./bold.directive";
 
 //определение маршрутов
 const appRoutes: Routes =[
@@ -19,7 +20,13 @@ const appRoutes: Routes =[
 
 @NgModule({
     imports:      [CommonModule, BrowserModule, FormsModule, RouterModule.forRoot(appRoutes, {useHash:true})],
-    declarations: [AppComponent, HomeComponent, AboutComponent, NotFoundComponent],
+    declarations: [
+        AppComponent,
+        HomeComponent,
+        AboutComponent,
+        NotFoundComponent,
+        BoldDirective
+    ],
     bootstrap:    [AppComponent],
     exports: [RouterModule]
 })
