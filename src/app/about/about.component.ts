@@ -10,7 +10,8 @@ interface ChartPoint {
 @Component({
     selector: 'about-app',
     template: ` <br>`,
-    styleUrls: ['./about.component.css']
+    styleUrls: ['././about.component.css']
+
 
 })
 
@@ -114,6 +115,7 @@ export class AboutComponent implements OnInit {
         svg.selectAll(".dot")
             .data(this.rawData)
             .enter().append("circle")
+            .attr("class", "dot")
             .attr("r", 3.5)
             .attr("cx", ((d:ChartPoint)=>scaleX(d.x)+this.margin))
             .attr("cy", ((d:ChartPoint)=>scaleY(d.y)+this.margin))
