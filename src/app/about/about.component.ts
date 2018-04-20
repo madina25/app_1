@@ -1,80 +1,174 @@
-import {Component, ElementRef, OnInit} from "@angular/core";
+import {Component, OnInit} from "@angular/core";
 import * as d3 from 'd3';
+
+interface ChartPoint {
+    x: number,
+    y: number
+}
+
 
 @Component({
     selector: 'about-app',
-    template: `<h3>Аbout</h3>
-    <div style="display:inline-block;" id="legend"></div>
-    <div style="display:inline-block; float:left" id="container"></div>
-    `,
-    styles: [`
-        .axis text {
-            font: 10px sans-serif;
-        }
+    template: ` <br>`,
+    styleUrls: ['./about.component.css']
 
-        .axis line, .axis path {
-            fill: none;
-            stroke: #000;
-            shape-rendering: crispEdges;
-        }
-    `]
 })
 
 export class AboutComponent implements OnInit {
-    correlationMatrix: any;
-    labels: any;
+    height: number;
+    width: number;
+    margin: number;
+    rawData: any;
+    data: any;
 
     constructor() {
+        this.height = 500;
+        this.width = 500;
+        this.margin = 30;
+        this.rawData = [
+            {x: 10, y: 67}, {x: 20, y: 74},{x: 30, y: 63},
+            {x: 40, y: 56}, {x: 50, y: 24}, {x: 60, y: 26},
+            {x: 70, y: 19}, {x: 80, y: 42}, {x: 90, y: 88}
+        ];
+        this.data = []
     }
 
     ngOnInit() {
-        let correlationMatrix = [
-            [1, 3, 0],
-            [3, 1, 0],
-            [0, 5, 1]
-        ];
+        let svg = d3.select("body").append("svg")
+            .attr("class", "axis")
+            .attr("width", this.width)
+            .attr("height", this.height);
+        //Длина оси Х
+        let xAxisLength = this.width - 2*this.margin;
 
-        let labels = ['Var 1', 'Var 2', 'Var 3'];
+        //Длина оси У
+        let yAxisLength = this.height - 2*this.margin;
 
-        function Matrix(options:any) {
-            let margin = {top: 50, right: 50, bottom: 100, left: 100},
-                width = 350,
-                height = 350,
-                data = options.data,
-                container = options.container,
-                labelsData = options.labels,
-                startColor = options.start_color,
-                endColor = options.end_color;
+        //Интерполяция на Х и У
+        let scaleX = d3.scaleLinear()
+            .domain([0,100])
+            .range([0, xAxisLength]);
+        let scaleY = d3.scaleLinear()
+            .domain([100,0])
+            .range([0, yAxisLength]);
 
-            let widthLegend = 100;
+        for (let i=0; i<Object.keys(this.rawData).length; i++){
+            this.data.push({x: scaleX(this.rawData[i].x)+this.margin, y: scaleY(this.rawData[i].y)+this.margin})
+        }
 
-             if(!data){
-                 throw new Error('Please pass data');
-             }
+        //Создание оси Х
+        let xAxis = d3.axisBottom(scaleX);
 
-             if(!Array.isArray(data) || !data.length || !Array.isArray(data[0])){
-                 throw new Error('It should be a 2-D array');
-             }
+        //Создание оси Y
+        let yAxis = d3.axisLeft(scaleY);
 
-             let maxValue = d3.max(data, function(layer) { return d3.max(layer, function(d:any) { return d; }); });
-             let minValue = d3.min(data, function(layer) { return d3.min(layer, function(d:any) { return d; }); });
+        svg.append("g")
+            .attr("class", "x-axis")
+            .attr("transform",
+                "translate(" + this.margin +"," + (this.height -this.margin)+ ")")
+            .call(xAxis);
 
-             let numrows = data.length;
-             let numcols:any = data[0].length;
+        svg.append("g")
+            .attr("class","y-axis")
+            .attr("transform",
+                "translate("+ this.margin +"," + this.margin +")")
+            .call(yAxis);
 
-             let svg = d3.select(container).append("svg")
-                 .attr("width", width + margin.left + margin.right)
-                 .attr("height", height + margin.top + margin.bottom)
-                 .append("g")
-                 .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+        //Набор вертикальных линий для сетки
+        d3.selectAll("g.x-axis g.tick")
+            .append("line")
+            .attr("y2", - (this.height-2*this.margin));
 
-             let background = svg.append("rect")
-                 .style("stroke", "black")
-                 .style("stroke-width", "2px")
-                 .attr("width", width)
-                 .attr("height", height);
+        //Горизонтальные
+        d3.selectAll("g.y-axis g.tick")
+            .append("line")
+            .attr("x2",yAxisLength);
 
-            let x = d3.scaleOrdinal()
+        //Создание линий по массиву точек
+        let line = d3.line<ChartPoint>()
+            .x((d: ChartPoint)=> scaleX(d.x))
+            .y((d: ChartPoint)=> scaleY(d.y));
+
+        let g = svg.append("g");
+        g.append("path")
+            .attr("d", line(this.data))
+            .style("stroke", "steelblue")
+            .style("stroke-width", 2);
+
+        //Заголовки
+        g.append("text")
+            .attr("x", this.margin+11)
+            .attr("y", this.margin-10)
+            .attr("text-anchor", "end")
+            .style("font-size","11px")
+            .style("color","steelblue")
+            .text("Ось Y");
+        g.append("text")
+            .attr("x", this.width-this.margin+11)
+            .attr("y", this.height-this.margin-10)
+            .attr("text-anchor", "end")
+            .style("font-size","11px")
+            .text("Ось X");
+
+        //Точки
+        svg.selectAll(".dot")
+            .data(this.rawData)
+            .enter().append("circle")
+            .attr("r", 3.5)
+            .attr("cx", ((d:ChartPoint)=>scaleX(d.x)+this.margin))
+            .attr("cy", ((d:ChartPoint)=>scaleY(d.y)+this.margin))
+
+    }
+}
+
+
+        // this.correlationMatrix = [
+        //     [1, 3, 0],
+        //     [3, 1, 0],
+        //     [0, 5, 1]
+        // ];
+        //
+        // this.labels = ['Var 1', 'Var 2', 'Var 3'];
+        //
+        // function Matrix(options:any) {
+        //     let margin = {top: 50, right: 50, bottom: 100, left: 100},
+        //         width = 350,
+        //         height = 350,
+        //         data = options.data,
+        //         container = options.container,
+        //         labelsData = options.labels,
+        //         startColor = options.start_color,
+        //         endColor = options.end_color;
+
+            // let widthLegend = 100;
+            //
+            //  if(!data){
+            //      throw new Error('Please pass data');
+            //  }
+            //
+            //  if(!Array.isArray(data) || !data.length || !Array.isArray(data[0])){
+            //      throw new Error('It should be a 2-D array');
+            //  }
+            //
+            //  let maxValue = d3.max(data, function(layer) { return d3.max(layer, function(d:any) { return d; }); });
+            //  let minValue = d3.min(data, function(layer) { return d3.min(layer, function(d:any) { return d; }); });
+            //
+            //  let numrows = data.length;
+            //  let numcols:any = data[0].length;
+            //
+            //  let svg = d3.select(container).append("svg")
+            //      .attr("width", width + margin.left + margin.right)
+            //      .attr("height", height + margin.top + margin.bottom)
+            //      .append("g")
+            //      .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+            //
+            //  let background = svg.append("rect")
+            //      .style("stroke", "black")
+            //      .style("stroke-width", "2px")
+            //      .attr("width", width)
+            //      .attr("height", height);
+
+            // let x = d3.scaleOrdinal()
                 // .domain(numrows)
                 // .rangeBands([0, width]);
             //
@@ -206,6 +300,6 @@ export class AboutComponent implements OnInit {
             //     .attr("class", "y axis")
             //     .attr("transform", "translate(41," + margin.top + ")")
             //     .call(yAxis)
-        }
-    }
-}
+        // }
+    // }
+// }
