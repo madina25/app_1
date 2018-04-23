@@ -10,11 +10,13 @@ import {HomeComponent} from "./home/home.component";
 import {NotFoundComponent} from "./not-found/not-found.component";
 import {CommonModule} from "@angular/common";
 import {BoldDirective} from "./bold.directive";
+import {MatrixComponent} from "./matrix/matrix.component";
 
 //определение маршрутов
 const appRoutes: Routes =[
     {path: '', component: HomeComponent},
     {path: 'about', component: AboutComponent},
+    {path: 'matrix', component: MatrixComponent},
     {path: '**', component: NotFoundComponent}
 ];
 
@@ -24,6 +26,7 @@ const appRoutes: Routes =[
         AppComponent,
         HomeComponent,
         AboutComponent,
+        MatrixComponent,
         NotFoundComponent,
         BoldDirective
     ],
