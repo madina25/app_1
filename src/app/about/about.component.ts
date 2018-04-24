@@ -8,8 +8,7 @@ interface ChartPoint {
 
 @Component({
     selector: 'about-app',
-    template: ` <br>
-    <div id="chart"></div>`,
+    templateUrl: 'about.component.html',
     styleUrls: ['./about.component.css']
 
 
